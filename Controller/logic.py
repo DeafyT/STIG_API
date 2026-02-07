@@ -1,6 +1,5 @@
-import configuration
+from . import configuration
 import os
-
 
 #Collect appropriate files. If a list_search is provided, it will find that list
 #otherwise, it will return all lists
@@ -51,24 +50,19 @@ def find_stig(stig_id, stig_list=None):
 #Search a STIG list for keywords and return all STIGs with the keywords
 def keyword_search(keywords, stig_list):
     target = list_files(stig_list)
-    data = collect_stigs(target)
+    data = collect_stigs(target[0])
+    for word in keywords:
+        data = iterable_search(word, data)
+
+    return data
+
+#Iterate through the keywords to shorten the STIGs to matching all keywords
+def iterable_search(word, stig_data):
     stigs = []
-
-    for d in data:
-        if word in d:
+    for d in stig_data:
+        if word.lower() in d:
             stigs.append(d)
-
-    res = []
-
-    for s in stigs:
-        res.append(parser.stig_search_summarize(s))
-        print()
-
-    for r in res:
-        if not res:
-            print('There was an error processing some of the data')
-    return "TODO: Implement function"
-
+    return stigs
 
 #Will collect the entire file and split it into a list. All STIGs returned
 def collect_stigs(file):
@@ -81,9 +75,4 @@ def collect_stigs(file):
     data = text.split(end_mark)
     return data
 
-
-
-
-
-print(find_stig("V-258241", "RHEL 9"))
 

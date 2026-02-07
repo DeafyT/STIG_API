@@ -11,7 +11,8 @@ async def root():
 async def stig_lookup(stig: str):
     if stig[0].lower() != "v":
         stig = f"V-{stig}"
-    return {"message": f"You want to look up {stig}?"}
+    file = logic.find_stig(stig)
+    return {"message": f"{stig} data: {file}"}
 
 @app.post("/question/{stig}")
 async def stig_question(data: dict, stig: str):
