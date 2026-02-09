@@ -46,11 +46,11 @@ async def output_analysis(data: dict, stig: str):
 async def helper():
     return [
         "/ :: Haven't decided yet",
-        "/stig_lookup/{STIG ID} :: Looks up the STIG ID provided and returns all of the STIG data",
-        "/question/{STIG ID} :: Send a question to the AI with json {\"question\": \"question here\"}",
-        "/keyword_search :: Send a list of words to the API with json {\"keywords\": [\"word\", \"word2\"]}",
-        "/available_STIG_lists :: Will provide a list of all available STIG lists",
-        "/output_analysis :: Send your STIG output to the AI for analysis on whether or not you meet requirements",
+        "/stig_lookup/{STIG ID} :GET: Looks up the STIG ID provided and returns all of the STIG data",
+        "/question/{STIG ID} :POST: Send a question to the AI with json {\"question\": \"question here\"}",
+        "/keyword_search :POST: Send a list of words to the API with json {\"keywords\": [\"word\", \"word2\"], \"stig\": \"stig id\"}",
+        "/available_STIG_lists :POST: Provides list of STIGs with json {\"list\": \"none\"} will return all lists",
+        "/output_analysis/{STIG ID} :POST: Send your STIG output to the AI for analysis on whether or not you meet requirements {\"results\": \"results here\"}",
         "/help :: Prints this menu"
     ]
 
