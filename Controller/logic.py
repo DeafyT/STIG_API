@@ -1,4 +1,4 @@
-from . import configuration
+from .Configurations import configuration
 import os
 
 #Collect appropriate files. If a list_search is provided, it will find that list
@@ -17,10 +17,23 @@ def list_files(list_search=None):
             targets.append(os.path.join(configuration.stig_location, file))
     return targets
 
+#Ensure that the STIG Group ID is formatted correctly
+def stig_id_formatter(stig_id):
+    try:
+        id = int(stig_id)
+        stig_id = f"V-{id}"
+        return stig_id
+    except:
+        if "v-" in stig_id:
+            return stig_id.replace("v-", "V-")
+        else:
+            return stig_id
+
 #Search for a STIG. Function will call list_files to get the list of files needed
 #If stig_list is None, all files will be searched. Otherwise, the specific file will be searched
 def find_stig(stig_id, stig_list=None):
     targets = list_files(stig_list)
+    stig_id = stig_id_formatter(stig_id)
 
     for target in targets:
         trigger = False
@@ -50,6 +63,10 @@ def find_stig(stig_id, stig_list=None):
 #Search a STIG list for keywords and return all STIGs with the keywords
 def keyword_search(keywords, stig_list):
     target = list_files(stig_list)
+    if len(target) > 1:
+        return "Error, too many lists returned. Be more specific."
+    elif len(target) == 0:
+        return "Error, list not found."
     data = collect_stigs(target[0])
     for word in keywords:
         data = iterable_search(word, data)
@@ -74,5 +91,4 @@ def collect_stigs(file):
     end_mark = "</Group>"
     data = text.split(end_mark)
     return data
-
 

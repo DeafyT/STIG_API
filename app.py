@@ -1,5 +1,7 @@
 from fastapi import FastAPI
-from Controller import logic
+from fastapi.responses import StreamingResponse
+from Controller import logic, intelligence
+from sse_starlette.sse import EventSourceResponse
 
 app = FastAPI()
 
@@ -9,33 +11,36 @@ async def root():
 
 @app.get("/stig_lookup/{stig}")
 async def stig_lookup(stig: str):
-    if stig[0].lower() != "v":
-        stig = f"V-{stig}"
     file = logic.find_stig(stig)
     return {"message": f"{stig} data: {file}"}
-
-@app.post("/question/{stig}")
-async def stig_question(data: dict, stig: str):
-    question = data["question"]
-    return {"message": f"Here is your question for {stig}: {question}"}
 
 @app.post("/keyword_search")
 async def keyword_search(data: dict):
     words = data["keywords"]
     stig_list = data["stig"]
-    return {"message": f"Here are the words: {words}"}
+    stigs = logic.keyword_search(words, stig_list)
+    return {"message": f"STIGs listed with keywords: {stigs}"}
 
 @app.post("/available_STIG_lists")
 async def stig_lists(data: dict):
-    stig_list = None
-    if data is not None:
-        stig_list = data["stig"]
-    return {"message": "Will print off all STIG lists available or STIG lists with keyword in name"}
+    if data["list"] == "none":
+        stig_list = None
+    else:
+        stig_list = data["list"]
+    stigs = logic.list_files(stig_list)
+    return {"message": f"{stigs}"}
 
-@app.post("/output_analysis")
-async def output_analysis(data: dict):
+@app.post("/question/{stig}")
+async def stig_question(data: dict, stig: str):
+    question = data["question"]
+    stig_data = logic.find_stig(stig)
+    return EventSourceResponse(intelligence.ask_ai(stig_data, question))
+
+@app.post("/output_analysis/{stig}")
+async def output_analysis(data: dict, stig: str):
     output = data["results"]
-    return {"message": f"Here is your STIG output you provided : {output}"}
+    stig_data = logic.find_stig(stig)
+    return EventSourceResponse(intelligence.ai_analysis(stig_data, output))
 
 @app.get("/help")
 async def helper():
