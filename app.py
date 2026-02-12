@@ -28,7 +28,13 @@ async def stig_lists(data: dict):
     else:
         stig_list = data["list"]
     stigs = logic.list_files(stig_list)
-    return {"message": f"{stigs}"}
+    stigs = logic.beautify_file(stigs)
+    return {"message": stigs}
+
+@app.post("/load_STIG_ids")
+async def stig_ids(data: dict):
+    ids_list = logic.list_ids(data["list"])
+    return {"message": ids_list}
 
 @app.post("/question/{stig}")
 async def stig_question(data: dict, stig: str):

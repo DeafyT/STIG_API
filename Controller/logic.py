@@ -17,6 +17,19 @@ def list_files(list_search=None):
             targets.append(os.path.join(configuration.stig_location, file))
     return targets
 
+#Function helps with making files look more presentable for app display
+def beautify_file(target):
+    start_point = 'U_'
+    end_point = '_Manual'
+    new_list = []
+    for t in target:
+        start_index = t.find(start_point) + len(start_point)
+        end_index = t.find(end_point, start_index)
+        temp_name = t[start_index:end_index]
+        new_list.append(temp_name.replace('_', ' '))
+    return new_list
+            
+
 #Ensure that the STIG Group ID is formatted correctly
 def stig_id_formatter(stig_id):
     try:
@@ -92,3 +105,33 @@ def collect_stigs(file):
     data = text.split(end_mark)
     return data
 
+#Will pull a list and get the first section with all of the Group IDs listed.
+#Returns the list of IDs
+def list_ids(stig_list):
+    target = list_files(stig_list)
+    temp = ''
+    start = False
+    #STIG lists (as of testing) list all of the group ids at the beginning of the file as one line
+    with open(target[0], 'r') as f:
+        for line in f:
+            if '<Profile' in line:
+                temp += line
+                break
+    #Splits the ids into a list         
+    unformatted = temp.split('selected=')
+    dup_list = []
+    #This will get the ids from the strings currently listed
+    for u in unformatted:
+        start_point = 'idref="'
+        end_point = '"'
+
+        start_index = u.find(start_point) + len(start_point)
+        end_index = u.find(end_point, start_index)
+
+        if start_index != -1 and end_index != -1:
+            dup_list.append(u[start_index:end_index])
+    #final line returns with left over data (no id involved)
+    if 'V-' not in dup_list[-1]:
+        dup_list.pop()
+    final_list = list(set(dup_list))    #This removes all duplicate entries
+    return final_list
