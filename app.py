@@ -9,10 +9,15 @@ app = FastAPI()
 async def root():
     return {"message": "Go to /help to print paths for API"}
 
-@app.get("/stig_lookup/{stig}")
-async def stig_lookup(stig: str):
-    file = logic.find_stig(stig)
-    return {"message": f"{stig} data: {file}"}
+@app.post("/stig_lookup/{stig}")
+async def stig_lookup(stig: str, data: dict):
+    if data["list"] == "none":
+        file = logic.find_stig(stig)
+        return {"message": file}
+    else:
+        stig_data = logic.find_stig(stig, data["list"])
+        stig_data = logic.beautify_stig(stig_data)
+        return {"message": stig_data}
 
 @app.post("/keyword_search")
 async def keyword_search(data: dict):
@@ -28,8 +33,8 @@ async def stig_lists(data: dict):
     else:
         stig_list = data["list"]
     stigs = logic.list_files(stig_list)
-    stigs = logic.beautify_file(stigs)
-    return {"message": stigs}
+    final_stig = logic.beautify_file(stigs)
+    return {"message": final_stig}
 
 @app.post("/load_STIG_ids")
 async def stig_ids(data: dict):

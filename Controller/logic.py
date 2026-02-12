@@ -26,8 +26,16 @@ def beautify_file(target):
         start_index = t.find(start_point) + len(start_point)
         end_index = t.find(end_point, start_index)
         temp_name = t[start_index:end_index]
+        if '/' in temp_name:
+            start_index = temp_name.rfind('/') + 1
+            temp_name = temp_name[start_index:]
+        if '.' in temp_name:
+            temp_name = temp_name[:temp_name.find('.')]
+        if "DOD_EP" in temp_name:
+            continue
         new_list.append(temp_name.replace('_', ' '))
-    return new_list
+    final_list = sorted(new_list)
+    return final_list
             
 
 #Ensure that the STIG Group ID is formatted correctly
@@ -72,6 +80,42 @@ def find_stig(stig_id, stig_list=None):
     stig_data = stig_data[:index + 8]
 
     return stig_data
+
+#This loads the data for the STIG requested
+def beautify_stig(data):
+    title = ''
+    title_start = data.find('</version><title>') + len('</version><title>')
+    title_end = data.find('</title>', title_start)
+    summary = ''
+    temp_summary_start = data.find('</title><description>', title_start) + len('</title><description>')
+    summary_start = data.find('VulnDiscussion&gt;', temp_summary_start) + len('VulnDiscussion&gt;')
+    summary_end = data.find('&lt;/VulnDiscussion', summary_start)
+    check_text = ''
+    check_start = data.find('<check-content>') + len('<check-content>')
+    check_end = data.find('</check-content>', check_start)
+    fix_text = ''
+    fix_temp_start = data.find('<fixtext ')
+    fix_start = data.find('>', fix_temp_start) + 1
+    fix_end = data.find('</fixtext>', fix_start)
+    severity = ''
+    severity_start = data.find('severity="') + len('severity="')
+    severity_end = data.find('"', severity_start)
+
+    summary = data[summary_start:summary_end]
+    check_text = data[check_start:check_end]
+    fix_text = data[fix_start:fix_end]
+    title = data[title_start:title_end]
+    severity = data[severity_start:severity_end]
+    if severity == "low":
+        severity = "CAT 3"
+    elif severity == "medium":
+        severity = "CAT 2"
+    else:
+        severity = "CAT 1"
+
+    stig_data = f"Severity: {severity}\n\nTitle: {title}\n\nSummary:\n{summary}\n\nCheck Text:\n{check_text}\n\nFix Text:\n{fix_text}"
+    return stig_data
+    
 
 #Search a STIG list for keywords and return all STIGs with the keywords
 def keyword_search(keywords, stig_list):
@@ -133,5 +177,6 @@ def list_ids(stig_list):
     #final line returns with left over data (no id involved)
     if 'V-' not in dup_list[-1]:
         dup_list.pop()
-    final_list = list(set(dup_list))    #This removes all duplicate entries
+    unsorted_list = list(set(dup_list))    #This removes all duplicate entries
+    final_list = sorted(unsorted_list)
     return final_list
