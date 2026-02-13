@@ -19,6 +19,16 @@ async def stig_lookup(stig: str, data: dict):
         stig_data = logic.beautify_stig(stig_data)
         return {"message": stig_data}
 
+@app.post("/former_stig_lookup/{stig}")
+async def former_stig_lookup(stig: str, data: dict):
+    if data["list"] == "none":
+        file = logic.find_former_stig(stig)
+        return {"message": file}
+    else:
+        stig_data = logic.find_former_stig(stig, data["list"])
+        stig_data = logic.beautify_stig(stig_data)
+        return {"message": stig_data}
+
 @app.post("/keyword_search")
 async def keyword_search(data: dict):
     words = data["keywords"]
@@ -52,6 +62,13 @@ async def output_analysis(data: dict, stig: str):
     output = data["results"]
     stig_data = logic.find_stig(stig)
     return EventSourceResponse(intelligence.ai_analysis(stig_data, output))
+
+@app.post("/changed_stigs")
+async def changed_stigs(data: dict):
+    print(data)
+    stig_list = data["list"]
+    change_list = logic.find_changes(stig_list)
+    return {"message": change_list}
 
 @app.get("/help")
 async def helper():
